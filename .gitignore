@@ -1,0 +1,43 @@
+# Visual Studio временные и пользовательские файлы
+*.vcxproj.user
+*.suo
+*.user
+*.sln.docstates
+
+# Папки сборки
+Debug/
+Release/
+x64/
+x86/
+*.tlog/
+*.log
+
+# Объектные и бинарные файлы
+*.obj
+*.exe
+*.dll
+*.lib
+*.exp
+*.ilk
+*.pdb
+*.iobj
+*.ipdb
+*.sys
+*.cat
+*.cer
+
+# Файлы рецептов и прочие артефакты сборки
+*.recipe
+*.lastbuildstate
+*.idb
+
+# Папки с конкретными конфигурациями 
+**/Debug/
+**/Release/
+
+# Временные файлы Windows
+Thumbs.db
+desktop.ini
+
+#скрыты пользовательские скрипты
+*.ps1
