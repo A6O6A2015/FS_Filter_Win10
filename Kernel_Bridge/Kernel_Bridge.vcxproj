@@ -145,6 +145,9 @@
       <Command>powershell.exe -ExecutionPolicy Bypass -File "$(ProjectDir)copy_drv.ps1"</Command>
       <Message>Копирование файлов</Message>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\km\x86\fltMgr.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <Inf Include="Kernel_Bridge.inf" />
@@ -154,11 +157,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Driver.h" />
-    <ClInclude Include="Queue.h" />
+    <ClInclude Include="minifilter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Driver.c" />
-    <ClCompile Include="Queue.c" />
+    <ClCompile Include="minifilter.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

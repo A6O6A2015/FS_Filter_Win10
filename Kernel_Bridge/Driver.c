@@ -1,3 +1,4 @@
+
 /*++
 
 Module Name:
@@ -6,31 +7,18 @@ Module Name:
 
 Abstract:
 
-    This file contains the driver entry points and callbacks.
-
-Environment:
-
-    Kernel-mode Driver Framework
+    WDF control device (bridge to user mode) for DelProtect.
 
 --*/
 
 #include "driver.h"
-#define IOCTL_CODE CTL_CODE(FILE_DEVICE_UNKNOWN, 0x3000, METHOD_BUFFERED, GENERIC_READ | GENERIC_WRITE)
+#include <wdm.h>
+#include <wdf.h>
+#include "minifilter.h"
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text (INIT, DriverEntry)
 #endif
-
-VOID
-DriverUnload(
-    _In_ WDFDRIVER Driver
-)
-{
-    UNREFERENCED_PARAMETER(Driver);
-
-    DbgPrint("DriverUnload\n");
-}
-
 
 NTSTATUS
 DriverEntry(
@@ -39,65 +27,59 @@ DriverEntry(
 )
 {
     NTSTATUS status;
-
     WDF_DRIVER_CONFIG config;
     WDF_OBJECT_ATTRIBUTES attributes;
-
     WDFDRIVER hDriver;
     PWDFDEVICE_INIT deviceInit;
-
     UNICODE_STRING sddl;
 
-    DbgPrint("DriverEntry start\n");
+    DbgPrint("DelProtect: DriverEntry start\n");
+
     WDF_DRIVER_CONFIG_INIT(&config, WDF_NO_EVENT_CALLBACK);
-
     config.DriverInitFlags |= WdfDriverInitNonPnpDriver;
-
     config.EvtDriverUnload = DriverUnload;
-
     WDF_OBJECT_ATTRIBUTES_INIT(&attributes);
 
-    status = WdfDriverCreate(
-        DriverObject,
-        RegistryPath,
-        &attributes,
-        &config,
-        &hDriver
-    );
-
+    status = WdfDriverCreate(DriverObject, RegistryPath, &attributes, &config, &hDriver);
     if (!NT_SUCCESS(status))
     {
-        DbgPrint("WdfDriverCreate failed: 0x%X\n", status);
+        DbgPrint("DelProtect: WdfDriverCreate failed: 0x%X\n", status);
         return status;
     }
-    RtlInitUnicodeString(
-        &sddl,
-        L"D:P(A;;GA;;;SY)(A;;GA;;;BA)"
-    );
-    deviceInit = WdfControlDeviceInitAllocate(
-        hDriver,
-        &sddl
-    );
 
+    RtlInitUnicodeString(&sddl, L"D:P(A;;GA;;;SY)(A;;GA;;;BA)");
+    deviceInit = WdfControlDeviceInitAllocate(hDriver, &sddl);
     if (deviceInit == NULL)
     {
-        DbgPrint("WdfControlDeviceInitAllocate failed\n");
+        DbgPrint("DelProtect: WdfControlDeviceInitAllocate failed\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     status = CreateControlDevice(deviceInit);
-
     if (!NT_SUCCESS(status))
     {
-        DbgPrint("CreateControlDevice failed: 0x%X\n", status);
+        DbgPrint("DelProtect: CreateControlDevice failed: 0x%X\n", status);
         return status;
     }
 
-    DbgPrint("DriverEntry success\n");
+    status = MiniFilterInit(DriverObject);
+    if (!NT_SUCCESS(status))
+    {
+        DbgPrint("DelProtect: MiniFilterInit failed: 0x%X\n", status);
+        return status;
+    }
 
+    DbgPrint("DelProtect: DriverEntry success.\n");
     return STATUS_SUCCESS;
 }
 
+VOID
+DriverUnload(_In_ WDFDRIVER Driver)
+{
+    UNREFERENCED_PARAMETER(Driver);
+    DbgPrint("DelProtect: DriverUnload\n");
+    MiniFilterCleanup();
+}
 NTSTATUS
 CreateControlDevice(
     _Inout_ PWDFDEVICE_INIT DeviceInit
